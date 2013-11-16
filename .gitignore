@@ -15,3 +15,6 @@
 # ROS build libs
 build/
 devel/
+
+#ignore gedit temp files 
+*~
