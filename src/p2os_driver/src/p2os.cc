@@ -180,6 +180,7 @@ void
 P2OSNode::check_and_set_vel()
 {
   if( !vel_dirty ) return;
+  else ROS_INFO("velocity dirty");
 
   ROS_DEBUG( "setting vel: [%0.2f,%0.2f]",cmdvel_.linear.x,cmdvel_.angular.z);
   vel_dirty = false;
@@ -209,8 +210,11 @@ P2OSNode::check_and_set_vel()
       motorcommand[2] = motor_max_speed & 0x00FF;
       motorcommand[3] = (motor_max_speed & 0xFF00) >> 8;
     }
+    ROS_INFO("building packet");
     motorpacket.Build(motorcommand, 4);
+    ROS_INFO("built packet");
     SendReceive(&motorpacket);
+    ROS_INFO("sent packet");
 
     motorcommand[0] = RVEL;
     if( va >= 0 ) motorcommand[1] = ARGINT;
@@ -224,7 +228,7 @@ P2OSNode::check_and_set_vel()
     }
     else
     {
-      ROS_WARN("Turn rate demand threshholded!");
+      ROS_WARN("Turn rate demand thresholded!");
       motorcommand[2] = this->motor_max_turnspeed & 0x00FF;
       motorcommand[3] = (this->motor_max_turnspeed & 0xFF00) >> 8;
     }
@@ -267,10 +271,13 @@ P2OSNode::Setup()
 
   ROS_INFO("P2OS connection opening serial port %s...",psos_serial_port.c_str());
 
+  //this attempts to open the serial port using open().
+  //open returns an int which is the system's identifier for the serial port
+  //and further calls can use write(that_int,...) to write to the serial port
   if((this->psos_fd = open(this->psos_serial_port.c_str(),
                    O_RDWR | O_SYNC | O_NONBLOCK, S_IRUSR | S_IWUSR )) < 0 )
   {
-    ROS_ERROR("P2OS::Setup():open():");
+    ROS_ERROR("P2OS::Setup():open(): failed to open serial port called %s did you chmod 777 %s ?",this->psos_serial_port.c_str(),this->psos_serial_port.c_str());
     return(1);
   }
 
@@ -695,16 +702,21 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
 
   if((this->psos_fd >= 0) && this->sippacket)
   {
-    if(pkt)
+	//check if the packet was not NULL
+    if(pkt) {
+      ROS_INFO("Sending packet from SendReceive");
       pkt->Send(this->psos_fd);
+      ROS_INFO("Sent packet  from SendReceive");
+    }
 
     /* receive a packet */
     pthread_testcancel();
-    if(packet.Receive(this->psos_fd))
+ /*   if(packet.Receive(this->psos_fd))
     {
       ROS_ERROR("RunPsosThread(): Receive errored");
       pthread_exit(NULL);
     }
+    ROS_INFO("Received packet  from SendReceive");
 
     if(packet.packet[0] == 0xFA && packet.packet[1] == 0xFB &&
        (packet.packet[3] == 0x30 || packet.packet[3] == 0x31 ||
@@ -712,7 +724,7 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
        packet.packet[3] == 0x34))
     {
 
-      /* It is a server packet, so process it */
+      // It is a server packet, so process it
       this->sippacket->ParseStandard( &packet.packet[3] );
       this->sippacket->FillStandard(&(this->p2os_data));
 
@@ -722,6 +734,7 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
     else if(packet.packet[0] == 0xFA && packet.packet[1] == 0xFB &&
             packet.packet[3] == SERAUX)
     {
+ */
       // This is an AUX serial packet
  /*     if(ptz_.isOn())
       {
@@ -740,13 +753,14 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
       }
       */
     }
-    else
+ /*   else
     {
       ROS_ERROR("Received other packet!");
       packet.PrintHex();
     }
-  }
 
+  }
+*/
   return(0);
 }
 

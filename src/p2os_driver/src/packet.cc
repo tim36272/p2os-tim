@@ -1,7 +1,7 @@
 /*
  *  P2OS for ROS
  *  Copyright (C) 2000
- *     David Feil-Seifer, Brian Gerkey, Kasper Stoy, 
+ *     David Feil-Seifer, Brian Gerkey, Kasper Stoy,
  *      Richard Vaughan, & Andrew Howard
  *
  *
@@ -90,17 +90,19 @@ int P2OSPacket::Receive( int fd )
   {
     memset(prefix,0,sizeof(prefix));
     //memset( prefix, 0, 3);
-
+    ROS_INFO("in Receive loop");
     while(1)
     {
       cnt = 0;
       while( cnt!=1 )
       {
+    	ROS_INFO("in Receive and calling read");
         if ( (cnt+=read( fd, &prefix[2], 1 )) < 0 )
         {
           ROS_ERROR("Error reading packet header from robot connection: P2OSPacket():Receive():read():");
           return(1);
         }
+        ROS_INFO("in Receive and called read");
       }
 
       if (prefix[0]==0xFA && prefix[1]==0xFB) break;
@@ -113,6 +115,7 @@ int P2OSPacket::Receive( int fd )
       prefix[1]=prefix[2];
       //skipped++;
     }
+    ROS_INFO("out of Receive loop");
     //if (skipped>3) ROS_INFO("Skipped %d bytes\n", skipped);
 
     size = prefix[2]+3;
@@ -153,7 +156,7 @@ int P2OSPacket::Build( unsigned char *data, unsigned char datasize ) {
   packet[3+datasize+1] = chksum & 0xFF;
 
   if (!Check()) {
-    ROS_ERROR("DAMN");
+    ROS_ERROR("Packet build failed");
     return(1);
   }
   return(0);
