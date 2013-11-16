@@ -2,14 +2,14 @@
   <name>p2os_driver_tim</name>
   <version>1.0.9.1</version>
   <description>Driver file descriptions for P2OS/ARCOS robot</description>
-  <!-- <maintainer>Edward</maintainer> -->
+  <!-- <maintainer>Tim Sweet</maintainer> -->
 
   <license>BSD</license>
 
-  <url type="website">http://ros.org/wiki/p2os-vanderbilt</url>
+
   <!-- <url type="bugtracker"></url> -->
 
-  <maintainer email="hunter.allen@vanderbilt.edu">Hunter Allen</maintainer>
+  <maintainer email="timothy.l.sweet@gmail.com">Timothy Sweet</maintainer>
 
   <author email="hunter.allen@Vanderbilt.edu">Hunter Allen</author>
   <author email="dfseifer@usc.edu">David Feil-Seifer</author>
@@ -20,6 +20,7 @@
   <author>Tucker Hermans</author>
   <author>ActivMedia Robotics LLC</author>
   <author>MobileRobots Inc.</author>
+  <author>Timothy Sweet</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
