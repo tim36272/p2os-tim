@@ -711,7 +711,7 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
 
     /* receive a packet */
     pthread_testcancel();
- /*   if(packet.Receive(this->psos_fd))
+    if(packet.Receive(this->psos_fd))
     {
       ROS_ERROR("RunPsosThread(): Receive errored");
       pthread_exit(NULL);
@@ -734,7 +734,7 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
     else if(packet.packet[0] == 0xFA && packet.packet[1] == 0xFB &&
             packet.packet[3] == SERAUX)
     {
- */
+
       // This is an AUX serial packet
  /*     if(ptz_.isOn())
       {
@@ -753,14 +753,13 @@ P2OSNode::SendReceive(P2OSPacket* pkt, bool publish_data)
       }
       */
     }
- /*   else
+    else
     {
       ROS_ERROR("Received other packet!");
       packet.PrintHex();
     }
 
   }
-*/
   return(0);
 }
 

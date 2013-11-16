@@ -1,0 +1,4 @@
+digraph G {
+"base_link" -> "camera_depth_frame"[label="Broadcaster: /static_link_pub\nAverage rate: 79.161 Hz\nMost recent transform: 1384590198.654 \nBuffer length: 4.965 sec\n"];
+"map" -> "odom"[label="Broadcaster: /slam_gmapping\nAverage rate: 20.204 Hz\nMost recent transform: 1384590198.661 \nBuffer length: 4.900 sec\n"];
+}
