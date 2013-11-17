@@ -119,6 +119,9 @@ P2OSNode::P2OSNode( ros::NodeHandle nh ) :
 
   // initialize robot parameters (player legacy)
   initialize_robot_params();
+
+  //stuff Tim added
+  send_packet_again_ = true;
 }
 
 P2OSNode::~P2OSNode()
@@ -132,6 +135,7 @@ P2OSNode::cmdmotor_state( const p2os_driver::MotorStateConstPtr &msg)
   cmdmotor_state_ = *msg;
 }
 
+//this function sets the motor state (not it's power levels or anything)
 void
 P2OSNode::check_and_set_motor_state()
 {
@@ -157,15 +161,18 @@ P2OSNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {
 	ROS_INFO("Got packet at %f",ros::Time::now().toSec());
 
-  if( fabs( msg->linear.x - cmdvel_.linear.x ) > 0.01 || fabs( msg->angular.z-cmdvel_.angular.z) > 0.01 )
+  //checks if the change in motor velocity since the last used cmd_vel is greater than a threshold
+//  if( fabs( msg->linear.x - cmdvel_.linear.x ) > 0.01 || fabs( msg->angular.z-cmdvel_.angular.z) > 0.01 )
   {
     veltime_ = ros::Time::now();
     ROS_DEBUG( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime_.toSec() );
     vel_dirty_ = true;
     cmdvel_ = *msg;
   }
-  else
+//  else
   {
+	//checks if the time since last update was more than 2 seconds ago and the robot should be moving
+	//and if so causes the motor command to be rebroadcast to the pioneer
     ros::Duration veldur = ros::Time::now() - veltime_;
     if( veldur.toSec() > 2.0 && ((fabs(cmdvel_.linear.x) > 0.01) || (fabs(cmdvel_.angular.z) > 0.01)) )
     {
@@ -184,7 +191,8 @@ P2OSNode::check_and_set_vel()
   else ROS_INFO("velocity dirty");
 
   ROS_DEBUG( "setting vel: [%0.2f,%0.2f]",cmdvel_.linear.x,cmdvel_.angular.z);
-  vel_dirty_ = false;
+  vel_dirty_ = send_packet_again_;
+  send_packet_again_ = !send_packet_again_;
 
   unsigned short absSpeedDemand, absturnRateDemand;
   unsigned char motorcommand[4];
@@ -663,7 +671,13 @@ P2OSNode::Shutdown()
   return 0;
 }
 
-
+//this function publishes auxillary information about the pioneer:
+//	pose
+//	odom (tf)
+//	battery level
+//	motor state (running/not running)
+//	aio??
+//	dio??
 void
 P2OSNode::StandardSIPPutData(ros::Time ts)
 {

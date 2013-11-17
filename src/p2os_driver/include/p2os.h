@@ -150,6 +150,9 @@ class P2OSNode
 
  //   P2OSPtz ptz_;
 
+    //stuff Tim added
+    bool send_packet_again_;
+
   public:
     geometry_msgs::Twist cmdvel_;
     p2os_driver::MotorState    cmdmotor_state_;
