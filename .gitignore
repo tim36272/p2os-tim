@@ -17,4 +17,4 @@ build/
 devel/
 
 #ignore gedit temp files 
-#*~
+*~
