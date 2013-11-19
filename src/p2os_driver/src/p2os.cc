@@ -111,7 +111,7 @@ P2OSNode::P2OSNode( ros::NodeHandle nh ) :
   //                           this);
   //ptz_cmd_sub_ = n_.subscribe("ptz_control", 1, &P2OSPtz::callback, &ptz_);
 
-  veltime_ = ros::Time::now();
+  last_velocity_send_time_ = ros::WallTime::now();
 
 	// add diagnostic functions
 	diagnostic_.add("Motor Stall", this, &P2OSNode::check_stall );
@@ -162,37 +162,33 @@ P2OSNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 	ROS_INFO("Got packet at %f",ros::Time::now().toSec());
 
   //checks if the change in motor velocity since the last used cmd_vel is greater than a threshold
-//  if( fabs( msg->linear.x - cmdvel_.linear.x ) > 0.01 || fabs( msg->angular.z-cmdvel_.angular.z) > 0.01 )
+  if( fabs( msg->linear.x - cmdvel_.linear.x ) > 0.01 || fabs( msg->angular.z-cmdvel_.angular.z) > 0.01 )
   {
-    veltime_ = ros::Time::now();
-    ROS_DEBUG( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime_.toSec() );
+    ROS_DEBUG( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, ros::Time::now().toSec() );
     vel_dirty_ = true;
     cmdvel_ = *msg;
   }
-//  else
-  {
-	//checks if the time since last update was more than 2 seconds ago and the robot should be moving
-	//and if so causes the motor command to be rebroadcast to the pioneer
-    ros::Duration veldur = ros::Time::now() - veltime_;
-    if( veldur.toSec() > 2.0 && ((fabs(cmdvel_.linear.x) > 0.01) || (fabs(cmdvel_.angular.z) > 0.01)) )
-    {
-      ROS_DEBUG( "maintaining old speed: %0.3f|%0.3f", veltime_.toSec(), ros::Time::now().toSec() );
-      vel_dirty_ = true;
-      veltime_ = ros::Time::now();
-    }
-  }
+
 
 }
 
 void
 P2OSNode::check_and_set_vel()
 {
+  //a message must be send every 0.5 seconds, so check when the last message
+  //was and send a pulse if necessary
+  //it actually checks if the time is greater than 0.4, which should catch
+  //the time within 0.5 seconds and send the pulse
+  if(ros::WallTime::now().toSec() - last_velocity_send_time_.toSec() > 0.4) {
+	  SendPulse();
+	  last_velocity_send_time_ = ros::WallTime::now();
+  }
   if( !vel_dirty_ ) return;
   else ROS_INFO("velocity dirty");
+  last_velocity_send_time_ = ros::WallTime::now();
 
   ROS_DEBUG( "setting vel: [%0.2f,%0.2f]",cmdvel_.linear.x,cmdvel_.angular.z);
-  vel_dirty_ = send_packet_again_;
-  send_packet_again_ = !send_packet_again_;
+  vel_dirty_ = false;
 
   unsigned short absSpeedDemand, absturnRateDemand;
   unsigned char motorcommand[4];

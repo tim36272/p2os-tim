@@ -120,7 +120,7 @@ class P2OSNode
     ros::Subscriber cmdvel_sub_, cmdmstate_sub_/*, gripper_sub_, ptz_cmd_sub_*/;
 
     tf::TransformBroadcaster odom_broadcaster_;
-    ros::Time veltime_;
+    ros::WallTime last_velocity_send_time_;
 
     SIP* sippacket_;
     std::string psos_serial_port_;
