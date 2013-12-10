@@ -159,7 +159,7 @@ P2OSNode::check_and_set_motor_state()
 void
 P2OSNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {
-	ROS_INFO("Got packet at %f",ros::Time::now().toSec());
+	ROS_DEBUG("Got velocity packet at %f",ros::Time::now().toSec());
 
   //checks if the change in motor velocity since the last used cmd_vel is greater than a threshold
   if( fabs( msg->linear.x - cmdvel_.linear.x ) > 0.01 || fabs( msg->angular.z-cmdvel_.angular.z) > 0.01 )
@@ -168,6 +168,11 @@ P2OSNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
     vel_dirty_ = true;
     cmdvel_ = *msg;
   }
+  else if(ros::WallTime::now().toSec() - last_velocity_send_time_.toSec() > 0.5)
+  {
+    vel_dirty_ = true;
+  }
+  vel_dirty_ = true;
 
 
 }
@@ -179,9 +184,9 @@ P2OSNode::check_and_set_vel()
   //was and send a pulse if necessary
   //it actually checks if the time is greater than 0.4, which should catch
   //the time within 0.5 seconds and send the pulse
-  if(ros::WallTime::now().toSec() - last_velocity_send_time_.toSec() > 0.4) {
+  if(ros::WallTime::now().toSec() - last_velocity_send_time_.toSec() > 0.5) {
 	  SendPulse();
-	  last_velocity_send_time_ = ros::WallTime::now();
+	  //last_velocity_send_time_ = ros::WallTime::now();
   }
   if( !vel_dirty_ ) return;
   else ROS_INFO("velocity dirty");
@@ -215,11 +220,9 @@ P2OSNode::check_and_set_vel()
       motorcommand[2] = motor_max_speed_ & 0x00FF;
       motorcommand[3] = (motor_max_speed_ & 0xFF00) >> 8;
     }
-    ROS_INFO("building packet");
     motorpacket.Build(motorcommand, 4);
-    ROS_INFO("built packet");
     SendReceive(&motorpacket);
-    ROS_INFO("sent packet");
+    ROS_INFO("sent velocity packet");
 
     motorcommand[0] = RVEL;
     if( va >= 0 ) motorcommand[1] = ARGINT;
@@ -942,11 +945,39 @@ inline double P2OSNode::SecsPerTicktoRadsPerSec (int joint, double msecs)
 */
 void P2OSNode::SendPulse (void)
 {
+  //stop the motors first
+  unsigned char motorcommand[4];
+  P2OSPacket motorpacket;
+
+  int vx = 0;
+  int va = 0;
+
+  {
+    // non-direct wheel control
+    motorcommand[0] = VEL;
+    motorcommand[1] = ARGNINT;
+
+      motorcommand[2] = 0 & 0x00FF;
+      motorcommand[3] = (0 & 0xFF00) >> 8;
+
+    motorpacket.Build(motorcommand, 4);
+    SendReceive(&motorpacket);
+    ROS_DEBUG("sent stop");
+
+    motorcommand[0] = RVEL;
+    motorcommand[1] = ARGNINT;
+
+      motorcommand[2] = 0 & 0x00FF;
+      motorcommand[3] = (0 & 0xFF00) >> 8;
+
+    motorpacket.Build(motorcommand,4);
+    SendReceive(&motorpacket);
+  }
   unsigned char command;
   P2OSPacket packet;
 
   command = PULSE;
   packet.Build(&command, 1);
-  SendReceive(&packet);
+  //SendReceive(&packet);
 }
 
