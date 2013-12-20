@@ -152,6 +152,7 @@ class P2OSNode
 
     //stuff Tim added
     bool send_packet_again_;
+    double odom_drift_rotational_;
 
   public:
     geometry_msgs::Twist cmdvel_;

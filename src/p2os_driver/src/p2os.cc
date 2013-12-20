@@ -91,6 +91,8 @@ P2OSNode::P2OSNode( ros::NodeHandle nh ) :
   // max_yawdecel
   n_private.param( "max_yawdecel", spd, 0.0);
   motor_max_rot_decel_ = (short)rint(RTOD(spd));
+  // odom_drift_rotational
+  n_private.param( "odom_drift_rotational", odom_drift_rotational_, 0.0);
 
   desired_freq_ = 10;
 
@@ -167,6 +169,7 @@ P2OSNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
     ROS_DEBUG( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, ros::Time::now().toSec() );
     vel_dirty_ = true;
     cmdvel_ = *msg;
+    cmdvel_.angular.z+=odom_drift_rotational_;
   }
   else if(ros::WallTime::now().toSec() - last_velocity_send_time_.toSec() > 0.5)
   {
