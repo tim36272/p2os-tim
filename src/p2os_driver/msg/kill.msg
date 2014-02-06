@@ -1,0 +1,2 @@
+string node_to_kill
+string killmessage
