@@ -29,23 +29,11 @@
 #include <p2os.h>
 #include <MotorState.h>
 #include "tf/transform_datatypes.h"
-#include "p2os_driver_tim/kill.h"
-
-void killcallback(const p2os_driver_tim::kill msg) {
-  if(msg.node_to_kill=="p2os") {
-    ROS_FATAL_STREAM("This node is going down with status: "<<msg.killmessage);
-    
-  } else {
-    ROS_INFO("Got kill message for another node");
-  }
-}
 
 int main( int argc, char** argv )
 {
   ros::init(argc,argv, "p2os");
   ros::NodeHandle n;
-
-  ros::Subscriber kill_sub = n.subscribe("kill",1,killcallback);
 
   P2OSNode *p = new P2OSNode(n);
 
